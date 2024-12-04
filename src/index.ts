@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import userRoutes from './routes/user.routes';
+import moduleRoutes from './routes/module.routes';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -16,6 +17,7 @@ app.use(cors());
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/modules', moduleRoutes);
 
 // Database Connection
 const mongoUri = process.env.MONGO_URI;
