@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { IClass } from './class.model';
 
 export interface IModule extends Document {
   name: string;
@@ -10,6 +11,7 @@ export interface IModule extends Document {
   starRating: number;
   author: string;
   category: string;
+  classes: IClass[];
 }
 
 const ModuleSchema: Schema = new Schema({
@@ -22,6 +24,7 @@ const ModuleSchema: Schema = new Schema({
   starRating: { type: Number, required: true, min: 0, max: 5 },
   author: { type: String, required: true },
   category: { type: String, required: true },
+  classes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Class' }],
 });
 
 export default mongoose.model<IModule>('Module', ModuleSchema);

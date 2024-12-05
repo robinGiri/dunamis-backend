@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import userRoutes from './routes/user.routes';
 import moduleRoutes from './routes/module.routes';
+import classRoutes from './routes/class.routes';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -18,6 +19,7 @@ app.use(cors());
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/modules', moduleRoutes);
+app.use('/api/classes', classRoutes);
 
 // Database Connection
 const mongoUri = process.env.MONGO_URI;
