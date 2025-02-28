@@ -23,10 +23,11 @@ dotenv.config({ path: "./config/config.env" });
 // Connect to the MongoDB database
 connectDB();
 
-// Route files (Student routes are mounted on /api/v1/auth)
+// Route files
 const auth = require("./routes/student");
 const batch = require("./routes/batch");
 const course = require("./routes/course");
+const quiz = require("./routes/quiz"); // New quiz routes
 
 // Parse JSON bodies and URL-encoded data, and cookies
 app.use(express.json());
@@ -52,10 +53,10 @@ app.use(xss());
 app.use(express.static(path.join(__dirname, "public")));
 
 // Mount routers
-// Student related routes are under /api/v1/auth
 app.use("/api/v1/auth", auth);
 app.use("/api/v1/batch", batch);
 app.use("/api/v1/course", course);
+app.use("/api/v1/quiz", quiz);
 
 // Only start the server if the environment is not "test"
 if (process.env.NODE_ENV !== "test") {
