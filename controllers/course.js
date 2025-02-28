@@ -1,95 +1,108 @@
 const asyncHandler = require("../middleware/async");
 const Course = require("../models/course");
 
-// @desc    Get all courses
-// @route   GET /api/v1/courses
-// @access  Public
-
-exports.getCourses = async (req, res, next) => {
+/**
+ * @desc    Get all courses
+ * @route   GET /api/v1/course/getAllCourse
+ * @access  Public
+ */
+exports.getCourses = asyncHandler(async (req, res, next) => {
   try {
     const courses = await Course.find();
-
     res.status(200).json({
       success: true,
       count: courses.length,
       data: courses,
     });
   } catch (err) {
-    res.status(400).json({ success: false });
+    res.status(400).json({ success: false, message: err.message });
   }
-};
+});
 
-// @desc    Get single course
-// @route   GET /api/v1/courses/:id
-// @access  Public
-
-exports.getCourse = async (req, res, next) => {
+/**
+ * @desc    Get a single course by ID
+ * @route   GET /api/v1/course/:id
+ * @access  Public
+ */
+exports.getCourse = asyncHandler(async (req, res, next) => {
   try {
     const course = await Course.findById(req.params.id);
-
     if (!course) {
-      return res.status(401).json({ message: "cannot find the course with " });
+      return res
+        .status(404)
+        .json({ message: `Course not found with id of ${req.params.id}` });
     }
-
     res.status(200).json({ success: true, data: course });
   } catch (err) {
     next(err);
   }
-};
+});
 
-// @desc    Create new course
-// @route   POST /api/v1/courses
-// @access  Private
-
-exports.createCourse = async (req, res, next) => {
+/**
+ * @desc    Create a new course
+ * @route   POST /api/v1/course/createCourse
+ * @access  Private (for testing, this may be public)
+ *
+ * Expected request body:
+ * {
+ *   "courseName": "Math 101",
+ *   "description": "An introductory math course",
+ *   "price": 49.99,
+ *   "type": "premium"  // or "free"
+ * }
+ */
+exports.createCourse = asyncHandler(async (req, res, next) => {
   try {
+    // Create a new course document using the provided request body
     const course = await Course.create(req.body);
-
     res.status(201).json({
       success: true,
       data: course,
     });
   } catch (err) {
-    next(err);
+    // Send a 400 error if validation fails or an error occurs
+    res.status(400).json({ success: false, message: err.message });
   }
-};
+});
 
-// @desc    Update course
-// @route   PUT /api/v1/courses/:id
-// @access  Private
-
-exports.updateCourse = async (req, res, next) => {
+/**
+ * @desc    Update a course by ID
+ * @route   PUT /api/v1/course/:id
+ * @access  Private
+ */
+exports.updateCourse = asyncHandler(async (req, res, next) => {
   try {
+    // Find the course by ID first
     let course = await Course.findById(req.params.id);
     if (!course) {
       return res
         .status(404)
-        .json({ message: "Course not found with id of ${req.params.id}" });
+        .json({ message: `Course not found with id of ${req.params.id}` });
     }
-
+    // Update course document with the new data and return the updated document
     course = await Course.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
-
     res.status(200).json({ success: true, data: course });
   } catch (err) {
     next(err);
   }
-};
+});
 
-// @desc    Delete course
-// @route   DELETE /api/v1/courses/:id
-// @access  Private
-
-exports.deleteCourse = async (req, res, next) => {
-  // delete course by id
+/**
+ * @desc    Delete a course by ID
+ * @route   DELETE /api/v1/course/:id
+ * @access  Private
+ */
+exports.deleteCourse = asyncHandler(async (req, res, next) => {
+  // Find and delete the course document by ID
   await Course.findByIdAndDelete(req.params.id).then((course) => {
     if (!course) {
       return res
         .status(404)
-        .json({ message: "Course not found with id of ${req.params.id}" });
+        .json({ message: `Course not found with id of ${req.params.id}` });
     }
     res.status(200).json({ success: true, data: course });
   });
-};
+});
