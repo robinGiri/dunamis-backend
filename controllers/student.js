@@ -1,15 +1,16 @@
+// controllers/student.js
 const asyncHandler = require("../middleware/async");
 const Student = require("../models/student");
 const Batch = require("../models/batch");
 const Course = require("../models/course");
 const path = require("path");
 const fs = require("fs");
-const student = require("../models/student");
 
+// ----------------------------------------------------------------------
 // @desc    Get all students
-// @route   GET /api/v1/students
+// @route   GET /api/v1/students (Not currently used; available for admin use)
 // @access  Private
-
+// ----------------------------------------------------------------------
 exports.getStudents = asyncHandler(async (req, res, next) => {
   const students = await Student.find({});
   res.status(200).json({
@@ -19,16 +20,17 @@ exports.getStudents = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    Get single student
+// ----------------------------------------------------------------------
+// @desc    Get single student by ID
 // @route   GET /api/v1/students/:id
 // @access  Private
-
+// ----------------------------------------------------------------------
 exports.getStudent = asyncHandler(async (req, res, next) => {
   const student = await Student.findById(req.params.id);
   if (!student) {
     return res
       .status(404)
-      .json({ message: "Student not found with id of ${req.params.id}" });
+      .json({ message: `Student not found with id of ${req.params.id}` });
   } else {
     res.status(200).json({
       success: true,
@@ -37,16 +39,19 @@ exports.getStudent = asyncHandler(async (req, res, next) => {
   }
 });
 
-// @desc    Create new student
-// @route   POST /api/v1/students
+// ----------------------------------------------------------------------
+// @desc    Register a new student
+// @route   POST /api/v1/auth/register
 // @access  Public
-
+// ----------------------------------------------------------------------
 exports.register = asyncHandler(async (req, res, next) => {
-  const student = await Student.findOne({ username: req.body.username });
-  if (student) {
+  // Check if a student with the same username already exists
+  const studentExists = await Student.findOne({ username: req.body.username });
+  if (studentExists) {
     return res.status(400).send({ message: "Student already exists" });
   }
 
+  // Create a new student document using the request body data
   await Student.create(req.body);
 
   res.status(200).json({
@@ -55,49 +60,41 @@ exports.register = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc   Login student
-// @route  POST /api/v1/students/login
-// @access Public
-
+// ----------------------------------------------------------------------
+// @desc    Login a student
+// @route   POST /api/v1/auth/login
+// @access  Public
+// ----------------------------------------------------------------------
 exports.login = asyncHandler(async (req, res, next) => {
   const { username, password } = req.body;
 
+  // Validate that both username and password are provided
   if (!username || !password) {
     return res
       .status(400)
       .json({ message: "Please provide a username and password" });
   }
 
-  // Check if student exists
+  // Find the student by username and explicitly select the password field
   const student = await Student.findOne({ username }).select("+password");
 
+  // Check if student exists and if the password matches
   if (!student || !(await student.matchPassword(password))) {
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
+  // Send token response (creates a JWT and sets a cookie)
   sendTokenResponse(student, 200, res);
 });
 
-//=========================== Searching ===========================
-
-// @desc    Search student by batch
+// ----------------------------------------------------------------------
+// @desc    Search students by batch
 // @route   GET /api/v1/students/search/:batchId
 // @access  Private
-
+// ----------------------------------------------------------------------
 exports.searchByBatch = asyncHandler(async (req, res, next) => {
-  // const students = await Student.find({ batch: req.params.batchId });
-  // if (!students) {
-  //   return res.status(404).send({ message: "No students found" });
-  // }
-  // res.status(200).json({
-  //   success: true,
-  //   count: students.length,
-  //   data: students,
-  // });
-
   const batchId = req.params.batchId;
-  // dont show password
-
+  // Find students matching the given batchId, populate batch and course data, and omit sensitive fields
   Student.find({ batch: batchId })
     .populate("batch", "-__v")
     .populate("course", "-__v")
@@ -117,13 +114,14 @@ exports.searchByBatch = asyncHandler(async (req, res, next) => {
     });
 });
 
-// @desc    Search student by course
+// ----------------------------------------------------------------------
+// @desc    Search students by course
 // @route   GET /api/v1/students/search/:courseId
 // @access  Private
-
+// ----------------------------------------------------------------------
 exports.searchByCourse = asyncHandler(async (req, res, next) => {
   const courseId = req.params.courseId;
-
+  // Find students matching the courseId in the courses array
   Student.find({
     course: {
       $elemMatch: {
@@ -149,10 +147,11 @@ exports.searchByCourse = asyncHandler(async (req, res, next) => {
     });
 });
 
-// @desc    Update student
-// @route   PUT /api/v1/students/:id
+// ----------------------------------------------------------------------
+// @desc    Update a student's information
+// @route   PUT /api/v1/auth/updateStudent/:id
 // @access  Private
-
+// ----------------------------------------------------------------------
 exports.updateStudent = asyncHandler(async (req, res, next) => {
   const user = req.body;
   const student = await Student.findByIdAndUpdate(req.params.id, user, {
@@ -171,27 +170,29 @@ exports.updateStudent = asyncHandler(async (req, res, next) => {
   });
 });
 
-// Get current user
-// @route   GET /api/v1/students/me
+// ----------------------------------------------------------------------
+// @desc    Get the current logged-in student's profile
+// @route   GET /api/v1/auth/getMe
 // @access  Private
-
+// ----------------------------------------------------------------------
 exports.getMe = asyncHandler(async (req, res, next) => {
-  // Show current user and don't show the password
+  // req.user is populated by the protect middleware
   const student = await Student.findById(req.user.id).select("-password");
-
   res.status(200).json(student);
 });
 
-// @desc    Delete student
-// @route   DELETE /api/v1/students/:id
+// ----------------------------------------------------------------------
+// @desc    Delete a student
+// @route   DELETE /api/v1/auth/deleteStudent/:id
 // @access  Private
-
+// ----------------------------------------------------------------------
 exports.deleteStudent = asyncHandler(async (req, res, next) => {
   console.log(req.params.id);
   Student.findByIdAndDelete(req.params.id)
     .then((student) => {
       if (student != null) {
-        var imagePath = path.join(
+        // Construct the image path if the student has an associated image
+        const imagePath = path.join(
           __dirname,
           "..",
           "public",
@@ -199,6 +200,7 @@ exports.deleteStudent = asyncHandler(async (req, res, next) => {
           student.image
         );
 
+        // Delete the image file from the file system
         fs.unlink(imagePath, (err) => {
           if (err) {
             console.log(err);
@@ -223,18 +225,12 @@ exports.deleteStudent = asyncHandler(async (req, res, next) => {
     });
 });
 
-// @desc Upload Single Image
-// @route POST /api/v1/auth/upload
-// @access Private
-
+// ----------------------------------------------------------------------
+// @desc    Upload a single image for a student
+// @route   POST /api/v1/auth/uploadImage
+// @access  Private
+// ----------------------------------------------------------------------
 exports.uploadImage = asyncHandler(async (req, res, next) => {
-  // // check for the file size and send an error message
-  // if (req.file.size > process.env.MAX_FILE_UPLOAD) {
-  //   return res.status(400).send({
-  //     message: `Please upload an image less than ${process.env.MAX_FILE_UPLOAD}`,
-  //   });
-  // }
-
   if (!req.file) {
     return res.status(400).send({ message: "Please upload a file" });
   }
@@ -244,27 +240,29 @@ exports.uploadImage = asyncHandler(async (req, res, next) => {
   });
 });
 
-// Get token from model , create cookie and send response
-const sendTokenResponse = (Student, statusCode, res) => {
-  const token = Student.getSignedJwtToken();
+// ----------------------------------------------------------------------
+// Helper function: Create a JWT token, set it as a cookie, and send it in the response
+// ----------------------------------------------------------------------
+const sendTokenResponse = (student, statusCode, res) => {
+  // Generate token using the model's method
+  const token = student.getSignedJwtToken();
 
+  // Options for the cookie (expires in 30 days)
   const options = {
-    //Cookie will expire in 30 days
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
     ),
     httpOnly: true,
   };
 
-  // Cookie security is false .if you want https then use this code. do not use in development time
+  // If in production (or "proc") mode, set secure cookies
   if (process.env.NODE_ENV === "proc") {
     options.secure = true;
   }
-  //we have created a cookie with a token
 
   res
     .status(statusCode)
-    .cookie("token", token, options) // key , value ,options
+    .cookie("token", token, options)
     .json({
       success: true,
       token,
