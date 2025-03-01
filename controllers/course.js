@@ -28,9 +28,7 @@ exports.getCourse = asyncHandler(async (req, res, next) => {
   try {
     const course = await Course.findById(req.params.id);
     if (!course) {
-      return res
-        .status(404)
-        .json({ message: `Course not found with id of ${req.params.id}` });
+      return res.status(404).json({ message: `Course not found with id of ${req.params.id}` });
     }
     res.status(200).json({ success: true, data: course });
   } catch (err) {
@@ -41,45 +39,42 @@ exports.getCourse = asyncHandler(async (req, res, next) => {
 /**
  * @desc    Create a new course
  * @route   POST /api/v1/course/createCourse
- * @access  Private (for testing, this may be public)
+ * @access  Private (or Public for testing)
  *
  * Expected request body:
  * {
  *   "courseName": "Math 101",
  *   "description": "An introductory math course",
  *   "price": 49.99,
- *   "type": "premium"  // or "free"
+ *   "type": "premium",         // or "free"
+ *   "author": "John Doe",      // optional
+ *   "category": "Science",     // optional
+ *   "img": "http://example.com/image.jpg" // optional
  * }
  */
 exports.createCourse = asyncHandler(async (req, res, next) => {
   try {
-    // Create a new course document using the provided request body
     const course = await Course.create(req.body);
     res.status(201).json({
       success: true,
       data: course,
     });
   } catch (err) {
-    // Send a 400 error if validation fails or an error occurs
     res.status(400).json({ success: false, message: err.message });
   }
 });
 
 /**
- * @desc    Update a course by ID
+ * @desc    Update course
  * @route   PUT /api/v1/course/:id
  * @access  Private
  */
 exports.updateCourse = asyncHandler(async (req, res, next) => {
   try {
-    // Find the course by ID first
     let course = await Course.findById(req.params.id);
     if (!course) {
-      return res
-        .status(404)
-        .json({ message: `Course not found with id of ${req.params.id}` });
+      return res.status(404).json({ message: `Course not found with id of ${req.params.id}` });
     }
-    // Update course document with the new data and return the updated document
     course = await Course.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -91,18 +86,18 @@ exports.updateCourse = asyncHandler(async (req, res, next) => {
 });
 
 /**
- * @desc    Delete a course by ID
+ * @desc    Delete course
  * @route   DELETE /api/v1/course/:id
  * @access  Private
  */
 exports.deleteCourse = asyncHandler(async (req, res, next) => {
-  // Find and delete the course document by ID
-  await Course.findByIdAndDelete(req.params.id).then((course) => {
+  try {
+    const course = await Course.findByIdAndDelete(req.params.id);
     if (!course) {
-      return res
-        .status(404)
-        .json({ message: `Course not found with id of ${req.params.id}` });
+      return res.status(404).json({ message: `Course not found with id of ${req.params.id}` });
     }
     res.status(200).json({ success: true, data: course });
-  });
+  } catch (err) {
+    next(err);
+  }
 });

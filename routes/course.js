@@ -27,21 +27,21 @@ router.get("/:id", getCourse);
 /**
  * @route   POST /api/v1/course/createCourse
  * @desc    Create a new course
- * @access  Private (for testing, this may be public)
+ * @access  Private (or Public for testing)
  */
 router.post("/createCourse", createCourse);
 
 /**
  * @route   PUT /api/v1/course/:id
  * @desc    Update a course by ID
- * @access  Private (requires authentication in production)
+ * @access  Private (requires authentication)
  */
 router.put("/:id", /* protect, */ updateCourse);
 
 /**
  * @route   DELETE /api/v1/course/:id
  * @desc    Delete a course by ID
- * @access  Private (requires authentication in production)
+ * @access  Private (requires authentication)
  */
 router.delete("/:id", /* protect, */ deleteCourse);
 
