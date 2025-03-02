@@ -28,6 +28,15 @@ const studentSchema = new mongoose.Schema({
       ref: "Course",
     },
   ],
+  role: {
+    type: String,
+    required: true,
+    enum: {
+      values: ["admin", "teacher", "student"],
+      message: 'Role must be either "admin", "teacher", or "student"',
+    },
+    default: "student",
+  },
 });
 
 // Encrypt password using bcrypt

@@ -266,5 +266,6 @@ const sendTokenResponse = (student, statusCode, res) => {
     .json({
       success: true,
       token,
+      student,
     });
 };

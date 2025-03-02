@@ -27,7 +27,8 @@ connectDB();
 const auth = require("./routes/student");
 const batch = require("./routes/batch");
 const course = require("./routes/course");
-const quiz = require("./routes/quiz"); // New quiz routes
+const quiz = require("./routes/quiz");
+const category = require("./routes/category");
 
 // Parse JSON bodies and URL-encoded data, and cookies
 app.use(express.json());
@@ -57,6 +58,7 @@ app.use("/api/v1/auth", auth);
 app.use("/api/v1/batch", batch);
 app.use("/api/v1/course", course);
 app.use("/api/v1/quiz", quiz);
+app.use("/api/v1/category", category);
 
 // Only start the server if the environment is not "test"
 if (process.env.NODE_ENV !== "test") {
