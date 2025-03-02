@@ -240,6 +240,44 @@ exports.uploadImage = asyncHandler(async (req, res, next) => {
   });
 });
 
+/**
+ * @desc    Enroll in a course
+ * @route   POST /api/v1/auth/enroll
+ * @access  Private
+ *
+ * Expected body: { courseId: "courseIdHere" }
+ */
+exports.enrollCourse = asyncHandler(async (req, res, next) => {
+  const { courseId } = req.body;
+  
+  // Assuming req.user.id is set by your authentication middleware
+  const student = await Student.findById(req.user.id);
+  if (!student) {
+    return res.status(404).json({ message: "Student not found" });
+  }
+  
+  // Ensure the courses array exists
+  if (!student.courses) {
+    student.courses = [];
+  }
+  
+  // Check if the courseId is already enrolled using toString() comparison
+  const alreadyEnrolled = student.courses.some(
+    (id) => id.toString() === courseId.toString()
+  );
+  
+  if (!alreadyEnrolled) {
+    student.courses.push(courseId);
+    await student.save();
+  }
+  
+  res.status(200).json({
+    success: true,
+    message: "Course enrolled successfully",
+    courses: student.courses,
+  });
+});
+
 // ----------------------------------------------------------------------
 // Helper function: Create a JWT token, set it as a cookie, and send it in the response
 // ----------------------------------------------------------------------

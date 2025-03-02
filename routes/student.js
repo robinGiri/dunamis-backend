@@ -17,6 +17,7 @@ const {
   deleteStudent,
   uploadImage,
   getMe,
+  enrollCourse,
 } = require("../controllers/student");
 
 // Route to upload a student image (if required)
@@ -51,5 +52,7 @@ router.delete("/deleteStudent/:id", protect, deleteStudent);
 // Get current logged-in student route
 // Full endpoint: GET /api/v1/auth/getMe
 router.get("/getMe", protect, getMe);
+
+router.post("/enroll", protect, enrollCourse);
 
 module.exports = router;

@@ -22,12 +22,7 @@ const studentSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: "Batch",
   },
-  course: [
-    {
-      type: mongoose.Schema.ObjectId,
-      ref: "Course",
-    },
-  ],
+  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
   role: {
     type: String,
     required: true,
