@@ -62,6 +62,16 @@ const courseSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    videoId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    courseContain: {
+      type: String,
+      trim: true,
+      default: "",
+    },
   },
   { timestamps: true }
 );
